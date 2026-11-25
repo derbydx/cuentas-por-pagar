@@ -83,13 +83,11 @@ def datos_proveedor_formulario():
 @login_required
 def dashboard():
     facturas = obtener_facturas()
+    por_atender = [factura for factura in facturas if factura["saldo"] > 0][:8]
     return render_template(
         "dashboard.html",
         metricas=metricas_dashboard(),
-        estados=ESTADOS,
-        proveedores=obtener_proveedores(),
-        recientes=facturas[:5],
-        vencidas=[factura for factura in facturas if factura["estado"] == "Vencida"][:5],
+        por_atender=por_atender,
     )
 
 

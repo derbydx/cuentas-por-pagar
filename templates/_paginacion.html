@@ -1,0 +1,21 @@
+{% macro paginacion(datos, ruta, filtros, etiqueta) %}
+<nav aria-label="Paginación">
+  <ul>
+    <li>
+      {% if datos.pagina > 1 %}
+        <a href="{{ url_for(ruta, pagina=datos.pagina - 1, **filtros) }}">Anterior</a>
+      {% else %}
+        <span class="secondary">Anterior</span>
+      {% endif %}
+    </li>
+    <li><span>Página {{ datos.pagina }} de {{ datos.total_paginas }} ({{ datos.total }} {{ etiqueta }})</span></li>
+    <li>
+      {% if datos.pagina < datos.total_paginas %}
+        <a href="{{ url_for(ruta, pagina=datos.pagina + 1, **filtros) }}">Siguiente</a>
+      {% else %}
+        <span class="secondary">Siguiente</span>
+      {% endif %}
+    </li>
+  </ul>
+</nav>
+{% endmacro %}

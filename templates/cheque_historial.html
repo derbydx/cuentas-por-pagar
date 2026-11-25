@@ -38,6 +38,7 @@
   <h2>Historial de estados</h2>
 
   {% if historial %}
+    <div class="tabla-scroll">
     <table>
       <thead>
         <tr>
@@ -58,6 +59,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   {% else %}
     <article class="secondary">
       <p>No hay cambios registrados para este cheque.</p>

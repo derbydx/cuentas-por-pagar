@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_paginacion.html" import paginacion %}
 
 {% block titulo %}Facturas | Cuentas por pagar{% endblock %}
 
@@ -46,68 +47,52 @@
 
 {% if datos.elementos %}
   <section>
-    <table>
-      <thead>
-        <tr>
-          <th>Factura</th>
-          <th>Proveedor</th>
-          <th>Concepto</th>
-          <th>Monto</th>
-          <th>Pagado</th>
-          <th>Saldo</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for factura in datos.elementos %}
+    <div class="tabla-scroll">
+      <table>
+        <thead>
           <tr>
-            <td><a href="{{ url_for('factura_detalle', factura_id=factura['id']) }}">{{ factura['numero_factura'] }}</a></td>
-            <td>{{ factura['proveedor_nombre'] }}</td>
-            <td>{{ factura['concepto']|truncate(40) }}</td>
-            <td>{{ factura['monto_total']|moneda }}</td>
-            <td>{{ factura['total_pagado']|moneda }}</td>
-            <td>{{ factura['saldo']|moneda }}</td>
-            <td>{{ factura['estado'] }}</td>
-            <td>
-              <a href="{{ url_for('factura_detalle', factura_id=factura['id']) }}" class="secondary outline">Ver</a>
-
-              {% if usuario['rol'] in ['administrador', 'contador'] %}
-                <a href="{{ url_for('factura_editar', factura_id=factura['id']) }}" class="secondary outline">Editar</a>
-              {% endif %}
-
-              {% if usuario['rol'] == 'administrador' %}
-                <form method="post" action="{{ url_for('factura_eliminar', factura_id=factura['id']) }}" style="display: inline;" onsubmit="return confirm('¿Eliminar esta factura y sus pagos?');">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="secondary outline">Eliminar</button>
-                </form>
-              {% endif %}
-            </td>
+            <th>Factura</th>
+            <th>Proveedor</th>
+            <th>Saldo</th>
+            <th>Estado</th>
+            <th>Acciones</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for factura in datos.elementos %}
+            <tr>
+              <td><a href="{{ url_for('factura_detalle', factura_id=factura['id']) }}">{{ factura['numero_factura'] }}</a></td>
+              <td>{{ factura['proveedor_nombre'] }}</td>
+              <td>{{ factura['saldo']|moneda }}</td>
+              <td>
+                {% if factura['estado'] == 'Vencida' %}
+                  <span class="estado-alerta">{{ factura['estado'] }}</span>
+                {% else %}
+                  {{ factura['estado'] }}
+                {% endif %}
+              </td>
+              <td class="acciones">
+                <a href="{{ url_for('factura_detalle', factura_id=factura['id']) }}" class="secondary outline">Ver</a>
+
+                {% if usuario['rol'] in ['administrador', 'contador'] %}
+                  <a href="{{ url_for('factura_editar', factura_id=factura['id']) }}" class="secondary outline">Editar</a>
+                {% endif %}
+
+                {% if usuario['rol'] == 'administrador' %}
+                  <form method="post" action="{{ url_for('factura_eliminar', factura_id=factura['id']) }}" onsubmit="return confirm('¿Eliminar esta factura y sus pagos?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="secondary outline">Eliminar</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </section>
 
-  <nav aria-label="Paginación">
-    <ul>
-      <li>
-        {% if datos.pagina > 1 %}
-          <a href="{{ url_for('facturas', estado=estado, proveedor_id=proveedor_id, q=buscar, pagina=datos.pagina - 1) }}">Anterior</a>
-        {% else %}
-          <span class="secondary">Anterior</span>
-        {% endif %}
-      </li>
-      <li><span>Página {{ datos.pagina }} de {{ datos.total_paginas }} ({{ datos.total }} facturas)</span></li>
-      <li>
-        {% if datos.pagina < datos.total_paginas %}
-          <a href="{{ url_for('facturas', estado=estado, proveedor_id=proveedor_id, q=buscar, pagina=datos.pagina + 1) }}">Siguiente</a>
-        {% else %}
-          <span class="secondary">Siguiente</span>
-        {% endif %}
-      </li>
-    </ul>
-  </nav>
+  {{ paginacion(datos, 'facturas', {'estado': estado, 'proveedor_id': proveedor_id, 'q': buscar}, 'facturas') }}
 {% else %}
   <article class="secondary">
     <p>No hay facturas para mostrar.</p>

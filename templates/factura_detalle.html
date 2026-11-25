@@ -9,20 +9,23 @@
     <p>{{ factura['proveedor_nombre'] }} · Estado: {{ factura['estado'] }}</p>
   </hgroup>
 
-  {% if usuario['rol'] in ['administrador', 'contador'] %}
-    <a href="{{ url_for('pago_nuevo', factura_id=factura['id']) }}" role="button">Registrar pago</a>
-    <a href="{{ url_for('factura_editar', factura_id=factura['id']) }}" role="button" class="secondary">Editar</a>
-  {% endif %}
+  <div class="acciones">
+    {% if usuario['rol'] in ['administrador', 'contador'] %}
+      <a href="{{ url_for('pago_nuevo', factura_id=factura['id']) }}" role="button">Registrar pago</a>
+      <a href="{{ url_for('factura_editar', factura_id=factura['id']) }}" role="button" class="secondary">Editar</a>
+    {% endif %}
 
-  {% if usuario['rol'] == 'administrador' %}
-    <form method="post" action="{{ url_for('factura_eliminar', factura_id=factura['id']) }}" style="display: inline;" onsubmit="return confirm('¿Eliminar esta factura y sus pagos?');">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="secondary outline">Eliminar</button>
-    </form>
-  {% endif %}
+    {% if usuario['rol'] == 'administrador' %}
+      <form method="post" action="{{ url_for('factura_eliminar', factura_id=factura['id']) }}" onsubmit="return confirm('¿Eliminar esta factura y sus pagos?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="secondary outline">Eliminar</button>
+      </form>
+    {% endif %}
+  </div>
 </section>
 
 <section>
+  <div class="tabla-scroll">
   <table>
     <tbody>
       <tr>
@@ -55,6 +58,7 @@
       </tr>
     </tbody>
   </table>
+  </div>
 
   <label for="progreso">Avance del pago: {{ porcentaje }}%</label>
   <progress id="progreso" value="{{ porcentaje }}" max="100"></progress>
@@ -64,6 +68,7 @@
   <h2>Historial de pagos</h2>
 
   {% if pagos %}
+    <div class="tabla-scroll">
     <table>
       <thead>
         <tr>
@@ -95,6 +100,7 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   {% else %}
     <article class="secondary">
       <p>Todavía no hay pagos registrados en esta factura.</p>

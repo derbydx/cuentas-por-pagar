@@ -30,93 +30,45 @@
 </section>
 
 <section>
-  <h2>Filtro rápido</h2>
-  <form method="get" action="{{ url_for('facturas') }}">
-    <div class="grid">
-      <div>
-        <label for="estado">Estado</label>
-        <select id="estado" name="estado">
-          <option value="">Todos</option>
-          {% for opcion in estados %}
-            <option value="{{ opcion }}">{{ opcion }}</option>
+  <h2>Facturas por atender</h2>
+
+  {% if por_atender %}
+    <div class="tabla-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Factura</th>
+            <th>Proveedor</th>
+            <th>Vencimiento</th>
+            <th>Saldo</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for factura in por_atender %}
+            <tr>
+              <td><a href="{{ url_for('factura_detalle', factura_id=factura['id']) }}">{{ factura['numero_factura'] }}</a></td>
+              <td>{{ factura['proveedor_nombre'] }}</td>
+              <td>{{ factura['fecha_vencimiento'] }}</td>
+              <td>{{ factura['saldo']|moneda }}</td>
+              <td>
+                {% if factura['estado'] == 'Vencida' %}
+                  <span class="estado-alerta">{{ factura['estado'] }}</span>
+                {% else %}
+                  {{ factura['estado'] }}
+                {% endif %}
+              </td>
+            </tr>
           {% endfor %}
-        </select>
-      </div>
-      <div>
-        <label for="proveedor_id">Proveedor</label>
-        <select id="proveedor_id" name="proveedor_id">
-          <option value="">Todos</option>
-          {% for proveedor in proveedores %}
-            <option value="{{ proveedor['id'] }}">{{ proveedor['nombre'] }}</option>
-          {% endfor %}
-        </select>
-      </div>
+        </tbody>
+      </table>
     </div>
-    <button type="submit" class="secondary">Ver facturas</button>
-  </form>
-</section>
-
-<section>
-  <h2>Próximos vencimientos</h2>
-
-  {% if recientes %}
-    <table>
-      <thead>
-        <tr>
-          <th>Factura</th>
-          <th>Proveedor</th>
-          <th>Vencimiento</th>
-          <th>Saldo</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for factura in recientes %}
-          <tr>
-            <td><a href="{{ url_for('factura_detalle', factura_id=factura['id']) }}">{{ factura['numero_factura'] }}</a></td>
-            <td>{{ factura['proveedor_nombre'] }}</td>
-            <td>{{ factura['fecha_vencimiento'] }}</td>
-            <td>{{ factura['saldo']|moneda }}</td>
-            <td>{{ factura['estado'] }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
   {% else %}
     <article class="secondary">
-      <p>Todavía no hay facturas registradas.</p>
+      <p>No hay facturas pendientes de pago.</p>
     </article>
   {% endif %}
-</section>
 
-<section>
-  <h2>Facturas vencidas</h2>
-
-  {% if vencidas %}
-    <table>
-      <thead>
-        <tr>
-          <th>Factura</th>
-          <th>Proveedor</th>
-          <th>Vencimiento</th>
-          <th>Saldo</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for factura in vencidas %}
-          <tr>
-            <td><a href="{{ url_for('factura_detalle', factura_id=factura['id']) }}">{{ factura['numero_factura'] }}</a></td>
-            <td>{{ factura['proveedor_nombre'] }}</td>
-            <td>{{ factura['fecha_vencimiento'] }}</td>
-            <td>{{ factura['saldo']|moneda }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <article class="secondary">
-      <p>No hay facturas vencidas.</p>
-    </article>
-  {% endif %}
+  <p><a href="{{ url_for('facturas') }}">Ver todas las facturas</a></p>
 </section>
 {% endblock %}

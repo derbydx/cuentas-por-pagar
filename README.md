@@ -75,7 +75,7 @@ Sin esa bandera, el script se detiene cuando la base no está vacía.
 .\.venv\Scripts\python.exe -m unittest -v test_app.py
 ```
 
-Actualmente hay 30 pruebas. Cubren login, CSRF, roles, altas y ediciones, borrados protegidos, reglas de saldo, cheques, historial, panel y CSV.
+Actualmente hay 34 pruebas. Cubren login, CSRF, roles, altas y ediciones, borrados protegidos, reglas de saldo, cheques, historial, panel, paginación, JS externo y CSV.
 
 ## Estructura
 
@@ -85,9 +85,10 @@ Actualmente hay 30 pruebas. Cubren login, CSRF, roles, altas y ediciones, borrad
 - `servicios.py`: reglas de negocio, filtros, métricas y paginación.
 - `sembrar_demo.py`: datos de ejemplo.
 - `test_app.py`: pruebas automáticas.
-- `templates/`: plantillas Jinja2 con Pico.css por CDN.
+- `templates/`: plantillas Jinja2 con Pico.css por CDN y macro de paginación compartida.
+- `static/app.js`: único script, carga condicional de campos de cheque.
 - `NOTAS_IMPORTANTES.md`: arranque, credenciales y solución de problemas.
 
 ## Estado del proyecto
 
-Plan completo de 13 pasos terminado. Sin commit ni push.
+Plan completo de 13 pasos terminado. Los cambios de vista están en la rama `prueba`. Pendiente de merge a `main` cuando lo autorices.

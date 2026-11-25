@@ -298,6 +298,15 @@ class PruebasProveedoresYUsuarios(PruebasBase):
         )
         self.assertIn("último administrador", respuesta.data.decode("utf-8"))
 
+    def test_paginacion_compartida(self):
+        for numero in range(21):
+            self.crear_proveedor(f"Proveedor Paginación {numero}")
+
+        respuesta = self.cliente.get("/proveedores").data
+        self.assertIn("Página 1 de 2".encode("utf-8"), respuesta)
+        self.assertIn(b"pagina=2", respuesta)
+        self.assertIn(b"(21 proveedores)", respuesta)
+
 
 class PruebasFacturas(PruebasBase):
     def validaciones(self):
@@ -348,6 +357,16 @@ class PruebasFacturas(PruebasBase):
         detalle = self.cliente.get(f"/facturas/{factura_id}").data
         self.assertIn(b"RD$ 750.00", detalle)
         self.assertIn(b"/pagos/nuevo", detalle)
+
+    def test_js_externo_en_pago(self):
+        factura_id = self.crear_factura("F-JS", 100)
+        respuesta = self.cliente.get(f"/facturas/{factura_id}/pagos/nuevo").data
+        self.assertIn(b"/static/app.js", respuesta)
+        self.assertNotIn(b"<script>", respuesta)
+
+        archivo_js = self.cliente.get("/static/app.js")
+        self.assertEqual(archivo_js.status_code, 200)
+        archivo_js.close()
 
     def test_estados_de_factura(self):
         pendiente = self.crear_factura("F-PENDIENTE", 1000)
@@ -479,6 +498,20 @@ class PruebasPagosYCheques(PruebasBase):
 
         self.assertIn(b"Cobrado / Compensado", self.cliente.get("/cheques").data)
 
+    def test_cambio_estado_con_boton(self):
+        factura_id = self.crear_factura("F-BOTON", 100)
+        self.pagar(
+            factura_id,
+            50,
+            metodo="Cheque",
+            estado_cheque="Emitido / En cartera",
+            numero_cheque="CH-BOTON",
+        )
+
+        respuesta = self.cliente.get("/cheques").data
+        self.assertNotIn(b"onchange=", respuesta)
+        self.assertIn(b">Cambiar</button>", respuesta)
+
     def test_cambio_estado_invalido(self):
         factura_id = self.crear_factura("F-ESTADO", 1000)
         self.pagar(
@@ -582,7 +615,9 @@ class PruebasPanel(PruebasBase):
     def test_menu_sin_enlaces_vacios(self):
         respuesta = self.cliente.get("/")
         self.assertNotIn(b'href="#"', respuesta.data)
-        self.assertIn(b'href="/">Panel</a>', respuesta.data)
+        self.assertNotIn(b">Panel</a>", respuesta.data)
+        self.assertIn(b"Cuentas por pagar</a>", respuesta.data)
+        self.assertIn(b'aria-current="page"', respuesta.data)
 
     def test_tarjetas_y_tablas(self):
         self.crear_factura("F-PANEL", 500, vencimiento=AYER)

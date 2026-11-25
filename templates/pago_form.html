@@ -65,20 +65,4 @@
     <a href="{{ url_for('factura_detalle', factura_id=factura['id']) }}" role="button" class="secondary">Cancelar</a>
   </form>
 </section>
-
-<script>
-  const metodoPago = document.getElementById('metodo');
-  const camposCheque = document.getElementById('campos-cheque');
-
-  function actualizarCamposCheque() {
-    const esCheque = metodoPago.value === 'Cheque';
-    camposCheque.style.display = esCheque ? '' : 'none';
-    camposCheque.querySelectorAll('input, select').forEach(function (campo) {
-      campo.required = esCheque;
-    });
-  }
-
-  metodoPago.addEventListener('change', actualizarCamposCheque);
-  actualizarCamposCheque();
-</script>
 {% endblock %}

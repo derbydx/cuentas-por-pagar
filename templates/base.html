@@ -9,6 +9,7 @@
   <style>
     :root {
       --espacio: 1rem;
+      --alerta: var(--pico-del-color, #a4262c);
     }
 
     .skip-link {
@@ -32,6 +33,10 @@
       margin-bottom: 0;
     }
 
+    nav form {
+      margin: 0;
+    }
+
     main.container {
       padding-top: calc(var(--espacio) * 2);
       padding-bottom: calc(var(--espacio) * 3);
@@ -41,7 +46,28 @@
       color: var(--pico-muted-color);
       font-size: 0.875rem;
     }
+
+    .tabla-scroll {
+      overflow-x: auto;
+    }
+
+    .acciones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .acciones form {
+      margin: 0;
+    }
+
+    .estado-alerta {
+      color: var(--alerta);
+      font-weight: 600;
+    }
   </style>
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -49,23 +75,36 @@
   <header class="nav-bar">
     <nav class="container">
       <ul>
-        <li><strong><a href="{{ url_for('dashboard') }}">Cuentas por pagar</a></strong></li>
+        <li>
+          <strong>
+            <a href="{{ url_for('dashboard') }}"{% if request.endpoint == 'dashboard' %} aria-current="page"{% endif %}>Cuentas por pagar</a>
+          </strong>
+        </li>
       </ul>
       <ul>
-        <li><a href="{{ url_for('dashboard') }}">Panel</a></li>
-        <li><a href="{{ url_for('proveedores') }}">Proveedores</a></li>
-        <li><a href="{{ url_for('facturas') }}">Facturas</a></li>
-        <li><a href="{{ url_for('cheques') }}">Cheques</a></li>
-        <li><a href="{{ url_for('exportar') }}">Exportar</a></li>
+        <li>
+          <a href="{{ url_for('proveedores') }}"{% if request.endpoint in ['proveedores', 'proveedor_nuevo', 'proveedor_editar'] %} aria-current="page"{% endif %}>Proveedores</a>
+        </li>
+        <li>
+          <a href="{{ url_for('facturas') }}"{% if request.endpoint in ['facturas', 'factura_nuevo', 'factura_detalle', 'factura_editar', 'pago_nuevo'] %} aria-current="page"{% endif %}>Facturas</a>
+        </li>
+        <li>
+          <a href="{{ url_for('cheques') }}"{% if request.endpoint in ['cheques', 'pago_historial', 'pago_cambiar_estado'] %} aria-current="page"{% endif %}>Cheques</a>
+        </li>
+        <li>
+          <a href="{{ url_for('exportar') }}"{% if request.endpoint in ['exportar', 'exportar_facturas', 'exportar_pagos'] %} aria-current="page"{% endif %}>Exportar</a>
+        </li>
         {% if usuario and usuario['rol'] == 'administrador' %}
-          <li><a href="{{ url_for('usuarios') }}">Usuarios</a></li>
+          <li>
+            <a href="{{ url_for('usuarios') }}"{% if request.endpoint in ['usuarios', 'usuario_nuevo', 'usuario_editar'] %} aria-current="page"{% endif %}>Usuarios</a>
+          </li>
         {% endif %}
       </ul>
       {% block usuario %}
         {% if usuario %}
           <li><span>{{ usuario['username'] }} · {{ usuario['rol'] }}</span></li>
           <li>
-            <form method="post" action="{{ url_for('auth.logout') }}" style="margin: 0;">
+            <form method="post" action="{{ url_for('auth.logout') }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="secondary outline">Salir</button>
             </form>
@@ -80,10 +119,12 @@
   <main class="container" id="contenido">
     {% with mensajes = get_flashed_messages(with_categories=true) %}
       {% if mensajes %}
-        {% for categoria, mensaje in mensajes %}
-          {% set clase = categoria if categoria in ['success', 'warning', 'danger'] else 'secondary' %}
-          <article class="{{ clase }}">{{ mensaje }}</article>
-        {% endfor %}
+        <div role="status" aria-live="polite">
+          {% for categoria, mensaje in mensajes %}
+            {% set clase = categoria if categoria in ['success', 'warning', 'danger'] else 'secondary' %}
+            <article class="{{ clase }}">{{ mensaje }}</article>
+          {% endfor %}
+        </div>
       {% endif %}
     {% endwith %}
 

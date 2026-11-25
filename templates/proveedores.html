@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_paginacion.html" import paginacion %}
 
 {% block titulo %}Proveedores | Cuentas por pagar{% endblock %}
 
@@ -23,60 +24,40 @@
 
 {% if datos.elementos %}
   <section>
-    <table>
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Teléfono</th>
-          <th>Email</th>
-          <th>Notas</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for proveedor in datos.elementos %}
+    <div class="tabla-scroll">
+      <table>
+        <thead>
           <tr>
-            <td>{{ proveedor['nombre'] }}</td>
-            <td>{{ proveedor['telefono'] or '-' }}</td>
-            <td>{{ proveedor['email'] or '-' }}</td>
-            <td>{{ proveedor['notas']|truncate(40) if proveedor['notas'] else '-' }}</td>
-            <td>
-              {% if usuario['rol'] in ['administrador', 'contador'] %}
-                <a href="{{ url_for('proveedor_editar', proveedor_id=proveedor['id']) }}" class="secondary outline">Editar</a>
-              {% endif %}
-
-              {% if usuario['rol'] == 'administrador' %}
-                <form method="post" action="{{ url_for('proveedor_eliminar', proveedor_id=proveedor['id']) }}" style="display: inline;" onsubmit="return confirm('¿Eliminar este proveedor?');">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="secondary outline">Eliminar</button>
-                </form>
-              {% endif %}
-            </td>
+            <th>Nombre</th>
+            <th>Email</th>
+            <th>Acciones</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for proveedor in datos.elementos %}
+            <tr>
+              <td>{{ proveedor['nombre'] }}</td>
+              <td>{{ proveedor['email'] or '-' }}</td>
+              <td class="acciones">
+                {% if usuario['rol'] in ['administrador', 'contador'] %}
+                  <a href="{{ url_for('proveedor_editar', proveedor_id=proveedor['id']) }}" class="secondary outline">Editar</a>
+                {% endif %}
+
+                {% if usuario['rol'] == 'administrador' %}
+                  <form method="post" action="{{ url_for('proveedor_eliminar', proveedor_id=proveedor['id']) }}" onsubmit="return confirm('¿Eliminar este proveedor?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="secondary outline">Eliminar</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </section>
 
-  <nav aria-label="Paginación">
-    <ul>
-      <li>
-        {% if datos.pagina > 1 %}
-          <a href="{{ url_for('proveedores', q=buscar, pagina=datos.pagina - 1) }}">Anterior</a>
-        {% else %}
-          <span class="secondary">Anterior</span>
-        {% endif %}
-      </li>
-      <li><span>Página {{ datos.pagina }} de {{ datos.total_paginas }} ({{ datos.total }} proveedores)</span></li>
-      <li>
-        {% if datos.pagina < datos.total_paginas %}
-          <a href="{{ url_for('proveedores', q=buscar, pagina=datos.pagina + 1) }}">Siguiente</a>
-        {% else %}
-          <span class="secondary">Siguiente</span>
-        {% endif %}
-      </li>
-    </ul>
-  </nav>
+  {{ paginacion(datos, 'proveedores', {'q': buscar}, 'proveedores') }}
 {% else %}
   <article class="secondary">
     <p>No hay proveedores para mostrar.</p>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_paginacion.html" import paginacion %}
 
 {% block titulo %}Usuarios | Cuentas por pagar{% endblock %}
 
@@ -21,53 +22,37 @@
 
 {% if datos.elementos %}
   <section>
-    <table>
-      <thead>
-        <tr>
-          <th>Usuario</th>
-          <th>Rol</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for usuario_fila in datos.elementos %}
+    <div class="tabla-scroll">
+      <table>
+        <thead>
           <tr>
-            <td>{{ usuario_fila['username'] }}</td>
-            <td>{{ usuario_fila['rol'] }}</td>
-            <td>{{ 'Activo' if usuario_fila['activo'] else 'Inactivo' }}</td>
-            <td>
-              <a href="{{ url_for('usuario_editar', usuario_id=usuario_fila['id']) }}" class="secondary outline">Editar</a>
-              <form method="post" action="{{ url_for('usuario_eliminar', usuario_id=usuario_fila['id']) }}" style="display: inline;" onsubmit="return confirm('¿Eliminar este usuario?');">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="secondary outline">Eliminar</button>
-              </form>
-            </td>
+            <th>Usuario</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Acciones</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for usuario_fila in datos.elementos %}
+            <tr>
+              <td>{{ usuario_fila['username'] }}</td>
+              <td>{{ usuario_fila['rol'] }}</td>
+              <td>{{ 'Activo' if usuario_fila['activo'] else 'Inactivo' }}</td>
+              <td class="acciones">
+                <a href="{{ url_for('usuario_editar', usuario_id=usuario_fila['id']) }}" class="secondary outline">Editar</a>
+                <form method="post" action="{{ url_for('usuario_eliminar', usuario_id=usuario_fila['id']) }}" onsubmit="return confirm('¿Eliminar este usuario?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="secondary outline">Eliminar</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </section>
 
-  <nav aria-label="Paginación">
-    <ul>
-      <li>
-        {% if datos.pagina > 1 %}
-          <a href="{{ url_for('usuarios', q=buscar, pagina=datos.pagina - 1) }}">Anterior</a>
-        {% else %}
-          <span class="secondary">Anterior</span>
-        {% endif %}
-      </li>
-      <li><span>Página {{ datos.pagina }} de {{ datos.total_paginas }} ({{ datos.total }} usuarios)</span></li>
-      <li>
-        {% if datos.pagina < datos.total_paginas %}
-          <a href="{{ url_for('usuarios', q=buscar, pagina=datos.pagina + 1) }}">Siguiente</a>
-        {% else %}
-          <span class="secondary">Siguiente</span>
-        {% endif %}
-      </li>
-    </ul>
-  </nav>
+  {{ paginacion(datos, 'usuarios', {'q': buscar}, 'usuarios') }}
 {% else %}
   <article class="secondary">
     <p>No hay usuarios para mostrar.</p>
