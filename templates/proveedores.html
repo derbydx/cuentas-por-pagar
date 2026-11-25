@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block titulo %}Proveedores | Cuentas por pagar{% endblock %}
+
+{% block contenido %}
+<section>
+  <hgroup>
+    <h1>Proveedores</h1>
+    <p>Gestiona los proveedores de las facturas por pagar.</p>
+  </hgroup>
+
+  {% if usuario['rol'] in ['administrador', 'contador'] %}
+    <a href="{{ url_for('proveedor_nuevo') }}" role="button">Nuevo proveedor</a>
+  {% endif %}
+</section>
+
+<section>
+  <form method="get" action="{{ url_for('proveedores') }}">
+    <input type="search" name="q" value="{{ buscar }}" placeholder="Buscar por nombre, teléfono, email o notas" aria-label="Buscar proveedores">
+    <button type="submit" class="secondary">Buscar</button>
+  </form>
+</section>
+
+{% if datos.elementos %}
+  <section>
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Teléfono</th>
+          <th>Email</th>
+          <th>Notas</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for proveedor in datos.elementos %}
+          <tr>
+            <td>{{ proveedor['nombre'] }}</td>
+            <td>{{ proveedor['telefono'] or '-' }}</td>
+            <td>{{ proveedor['email'] or '-' }}</td>
+            <td>{{ proveedor['notas']|truncate(40) if proveedor['notas'] else '-' }}</td>
+            <td>
+              {% if usuario['rol'] in ['administrador', 'contador'] %}
+                <a href="{{ url_for('proveedor_editar', proveedor_id=proveedor['id']) }}" class="secondary outline">Editar</a>
+              {% endif %}
+
+              {% if usuario['rol'] == 'administrador' %}
+                <form method="post" action="{{ url_for('proveedor_eliminar', proveedor_id=proveedor['id']) }}" style="display: inline;" onsubmit="return confirm('¿Eliminar este proveedor?');">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="secondary outline">Eliminar</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <nav aria-label="Paginación">
+    <ul>
+      <li>
+        {% if datos.pagina > 1 %}
+          <a href="{{ url_for('proveedores', q=buscar, pagina=datos.pagina - 1) }}">Anterior</a>
+        {% else %}
+          <span class="secondary">Anterior</span>
+        {% endif %}
+      </li>
+      <li><span>Página {{ datos.pagina }} de {{ datos.total_paginas }} ({{ datos.total }} proveedores)</span></li>
+      <li>
+        {% if datos.pagina < datos.total_paginas %}
+          <a href="{{ url_for('proveedores', q=buscar, pagina=datos.pagina + 1) }}">Siguiente</a>
+        {% else %}
+          <span class="secondary">Siguiente</span>
+        {% endif %}
+      </li>
+    </ul>
+  </nav>
+{% else %}
+  <article class="secondary">
+    <p>No hay proveedores para mostrar.</p>
+  </article>
+{% endif %}
+{% endblock %}

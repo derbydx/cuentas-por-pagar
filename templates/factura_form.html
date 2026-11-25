@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% set editando = factura and factura.get('id') %}
+
+{% block titulo %}{{ 'Editar factura' if editando else 'Nueva factura' }} | Cuentas por pagar{% endblock %}
+
+{% block contenido %}
+<section>
+  <hgroup>
+    <h1>{{ 'Editar factura' if editando else 'Nueva factura' }}</h1>
+    <p>El saldo se calculará automáticamente con los pagos registrados.</p>
+  </hgroup>
+
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="proveedor_id">Proveedor</label>
+    <select id="proveedor_id" name="proveedor_id" required>
+      <option value="">Selecciona un proveedor</option>
+      {% for proveedor in proveedores %}
+        <option value="{{ proveedor['id'] }}" {{ 'selected' if factura and proveedor['id'] == factura['proveedor_id'] else '' }}>{{ proveedor['nombre'] }}</option>
+      {% endfor %}
+    </select>
+
+    <div class="grid">
+      <div>
+        <label for="numero_factura">Número de factura</label>
+        <input type="text" id="numero_factura" name="numero_factura" value="{{ factura['numero_factura'] if factura else '' }}" required>
+      </div>
+      <div>
+        <label for="monto_total">Monto total</label>
+        <input type="number" id="monto_total" name="monto_total" value="{{ factura['monto_total'] if factura else '' }}" step="0.01" min="0.01" required>
+      </div>
+    </div>
+
+    <label for="concepto">Concepto</label>
+    <input type="text" id="concepto" name="concepto" value="{{ factura['concepto'] if factura else '' }}" required>
+
+    <div class="grid">
+      <div>
+        <label for="fecha_emision">Fecha de emisión</label>
+        <input type="date" id="fecha_emision" name="fecha_emision" value="{{ factura['fecha_emision'] if factura else '' }}" required>
+      </div>
+      <div>
+        <label for="fecha_vencimiento">Fecha de vencimiento</label>
+        <input type="date" id="fecha_vencimiento" name="fecha_vencimiento" value="{{ factura['fecha_vencimiento'] if factura else '' }}" required>
+      </div>
+    </div>
+
+    <button type="submit">Guardar</button>
+    <a href="{{ url_for('facturas') }}" role="button" class="secondary">Cancelar</a>
+  </form>
+</section>
+{% endblock %}

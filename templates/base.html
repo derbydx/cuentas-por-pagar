@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Gestión local de cuentas por pagar">
+  <title>{% block titulo %}Cuentas por pagar{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <style>
+    :root {
+      --espacio: 1rem;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+    }
+
+    .skip-link:focus {
+      left: var(--espacio);
+      top: var(--espacio);
+      z-index: 100;
+      background: var(--pico-background-color);
+      padding: 0.5rem 1rem;
+    }
+
+    header.nav-bar {
+      border-bottom: 1px solid var(--pico-muted-border-color);
+    }
+
+    header.nav-bar nav ul {
+      margin-bottom: 0;
+    }
+
+    main.container {
+      padding-top: calc(var(--espacio) * 2);
+      padding-bottom: calc(var(--espacio) * 3);
+    }
+
+    footer.container {
+      color: var(--pico-muted-color);
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+  <header class="nav-bar">
+    <nav class="container">
+      <ul>
+        <li><strong><a href="{{ url_for('dashboard') }}">Cuentas por pagar</a></strong></li>
+      </ul>
+      <ul>
+        <li><a href="{{ url_for('dashboard') }}">Panel</a></li>
+        <li><a href="{{ url_for('proveedores') }}">Proveedores</a></li>
+        <li><a href="{{ url_for('facturas') }}">Facturas</a></li>
+        <li><a href="{{ url_for('cheques') }}">Cheques</a></li>
+        <li><a href="{{ url_for('exportar') }}">Exportar</a></li>
+        {% if usuario and usuario['rol'] == 'administrador' %}
+          <li><a href="{{ url_for('usuarios') }}">Usuarios</a></li>
+        {% endif %}
+      </ul>
+      {% block usuario %}
+        {% if usuario %}
+          <li><span>{{ usuario['username'] }} · {{ usuario['rol'] }}</span></li>
+          <li>
+            <form method="post" action="{{ url_for('auth.logout') }}" style="margin: 0;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="secondary outline">Salir</button>
+            </form>
+          </li>
+        {% else %}
+          <li><a href="{{ url_for('auth.login') }}">Iniciar sesión</a></li>
+        {% endif %}
+      {% endblock %}
+    </nav>
+  </header>
+
+  <main class="container" id="contenido">
+    {% with mensajes = get_flashed_messages(with_categories=true) %}
+      {% if mensajes %}
+        {% for categoria, mensaje in mensajes %}
+          {% set clase = categoria if categoria in ['success', 'warning', 'danger'] else 'secondary' %}
+          <article class="{{ clase }}">{{ mensaje }}</article>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block contenido %}{% endblock %}
+  </main>
+
+  <footer class="container">
+    <small>Aplicación local con Flask y SQLite.</small>
+  </footer>
+</body>
+</html>

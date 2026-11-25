@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ 'Editar usuario' if not es_nuevo else 'Nuevo usuario' }} | Cuentas por pagar{% endblock %}
+
+{% block contenido %}
+<section>
+  <hgroup>
+    <h1>{{ 'Editar usuario' if not es_nuevo else 'Nuevo usuario' }}</h1>
+    <p>Roles: administrador, contador y consultor.</p>
+  </hgroup>
+
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="username">Usuario</label>
+    <input type="text" id="username" name="username" value="{{ usuario['username'] if usuario else '' }}" required autofocus>
+
+    <label for="password">Contraseña</label>
+    <input type="password" id="password" name="password" autocomplete="new-password" {{ 'required' if es_nuevo else '' }}>
+    {% if not es_nuevo %}
+      <small>Déjala vacía para mantener la contraseña actual. Mínimo 8 caracteres si la cambias.</small>
+    {% else %}
+      <small>Mínimo 8 caracteres.</small>
+    {% endif %}
+
+    <label for="rol">Rol</label>
+    <select id="rol" name="rol" required>
+      {% for rol in roles %}
+        <option value="{{ rol }}" {{ 'selected' if usuario and usuario['rol'] == rol else '' }}>{{ rol }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="activo">
+      <input type="checkbox" id="activo" name="activo" value="1" {{ 'checked' if (es_nuevo and not usuario) or (usuario and usuario['activo']) else '' }}>
+      Usuario activo
+    </label>
+
+    <button type="submit">Guardar</button>
+    <a href="{{ url_for('usuarios') }}" role="button" class="secondary">Cancelar</a>
+  </form>
+</section>
+{% endblock %}

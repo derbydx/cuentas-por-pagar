@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block titulo %}Historial de cheque {{ pago['numero_cheque'] }} | Cuentas por pagar{% endblock %}
+
+{% block contenido %}
+<section>
+  <hgroup>
+    <h1>Cheque {{ pago['numero_cheque'] }}</h1>
+    <p>{{ pago['proveedor_nombre'] }} · Factura {{ pago['numero_factura'] }} · {{ pago['monto']|moneda }}</p>
+  </hgroup>
+
+  <a href="{{ url_for('cheques') }}" role="button" class="secondary">Volver a cheques</a>
+</section>
+
+<section>
+  <h2>Cambiar estado</h2>
+
+  {% if usuario['rol'] in ['administrador', 'contador'] %}
+    <form method="post" action="{{ url_for('pago_cambiar_estado', pago_id=pago['id']) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="origen" value="historial">
+
+      <label for="estado_cheque">Nuevo estado</label>
+      <select id="estado_cheque" name="estado_cheque">
+        {% for opcion in estados %}
+          <option value="{{ opcion }}" {{ 'selected' if pago['estado_cheque'] == opcion else '' }}>{{ opcion }}</option>
+        {% endfor %}
+      </select>
+
+      <button type="submit">Guardar estado</button>
+    </form>
+  {% else %}
+    <p>Solo administradores y contadores pueden cambiar el estado.</p>
+  {% endif %}
+</section>
+
+<section>
+  <h2>Historial de estados</h2>
+
+  {% if historial %}
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Estado anterior</th>
+          <th>Estado nuevo</th>
+          <th>Usuario</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cambio in historial %}
+          <tr>
+            <td>{{ cambio['fecha_cambio'] }}</td>
+            <td>{{ cambio['estado_anterior'] or '-' }}</td>
+            <td>{{ cambio['estado_nuevo'] }}</td>
+            <td>{{ cambio['username'] or '-' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <article class="secondary">
+      <p>No hay cambios registrados para este cheque.</p>
+    </article>
+  {% endif %}
+</section>
+{% endblock %}

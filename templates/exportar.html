@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block titulo %}Exportar | Cuentas por pagar{% endblock %}
+
+{% block contenido %}
+<section>
+  <hgroup>
+    <h1>Exportar datos</h1>
+    <p>Archivos CSV con separador punto y coma, listos para abrir en Excel.</p>
+  </hgroup>
+</section>
+
+<section>
+  <h2>Facturas</h2>
+  <form method="get" action="{{ url_for('exportar_facturas') }}">
+    <div class="grid">
+      <div>
+        <label for="estado">Estado</label>
+        <select id="estado" name="estado">
+          <option value="">Todos</option>
+          {% for opcion in estados %}
+            <option value="{{ opcion }}">{{ opcion }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="proveedor_id">Proveedor</label>
+        <select id="proveedor_id" name="proveedor_id">
+          <option value="">Todos</option>
+          {% for proveedor in proveedores %}
+            <option value="{{ proveedor['id'] }}">{{ proveedor['nombre'] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="q">Buscar</label>
+        <input type="search" id="q" name="q" placeholder="Número, concepto o proveedor">
+      </div>
+    </div>
+    <button type="submit">Descargar facturas.csv</button>
+  </form>
+</section>
+
+<section>
+  <h2>Pagos y cheques</h2>
+  <form method="get" action="{{ url_for('exportar_pagos') }}">
+    <div class="grid">
+      <div>
+        <label for="proveedor_pago">Proveedor</label>
+        <select id="proveedor_pago" name="proveedor_id">
+          <option value="">Todos</option>
+          {% for proveedor in proveedores %}
+            <option value="{{ proveedor['id'] }}">{{ proveedor['nombre'] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="q_pago">Buscar</label>
+        <input type="search" id="q_pago" name="q" placeholder="Factura, proveedor o cheque">
+      </div>
+    </div>
+    <button type="submit">Descargar pagos.csv</button>
+  </form>
+</section>
+{% endblock %}

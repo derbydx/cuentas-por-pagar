@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ factura['numero_factura'] }} | Cuentas por pagar{% endblock %}
+
+{% block contenido %}
+<section>
+  <hgroup>
+    <h1>Factura {{ factura['numero_factura'] }}</h1>
+    <p>{{ factura['proveedor_nombre'] }} · Estado: {{ factura['estado'] }}</p>
+  </hgroup>
+
+  {% if usuario['rol'] in ['administrador', 'contador'] %}
+    <a href="{{ url_for('pago_nuevo', factura_id=factura['id']) }}" role="button">Registrar pago</a>
+    <a href="{{ url_for('factura_editar', factura_id=factura['id']) }}" role="button" class="secondary">Editar</a>
+  {% endif %}
+
+  {% if usuario['rol'] == 'administrador' %}
+    <form method="post" action="{{ url_for('factura_eliminar', factura_id=factura['id']) }}" style="display: inline;" onsubmit="return confirm('¿Eliminar esta factura y sus pagos?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="secondary outline">Eliminar</button>
+    </form>
+  {% endif %}
+</section>
+
+<section>
+  <table>
+    <tbody>
+      <tr>
+        <th scope="row">Proveedor</th>
+        <td>{{ factura['proveedor_nombre'] }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Concepto</th>
+        <td>{{ factura['concepto'] }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Monto total</th>
+        <td>{{ factura['monto_total']|moneda }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Total pagado</th>
+        <td>{{ factura['total_pagado']|moneda }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Saldo pendiente</th>
+        <td>{{ factura['saldo']|moneda }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Emisión</th>
+        <td>{{ factura['fecha_emision'] }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Vencimiento</th>
+        <td>{{ factura['fecha_vencimiento'] }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <label for="progreso">Avance del pago: {{ porcentaje }}%</label>
+  <progress id="progreso" value="{{ porcentaje }}" max="100"></progress>
+</section>
+
+<section>
+  <h2>Historial de pagos</h2>
+
+  {% if pagos %}
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Método</th>
+          <th>Monto</th>
+          <th>Afecta saldo</th>
+          <th>Cheque</th>
+          <th>Notas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pago in pagos %}
+          <tr>
+            <td>{{ pago['fecha_pago'] }}</td>
+            <td>{{ pago['metodo'] }}</td>
+            <td>{{ pago['monto']|moneda }}</td>
+            <td>{{ pago['monto_efectivo']|moneda }}</td>
+            <td>
+              {% if pago['metodo'] == 'Cheque' %}
+                {{ pago['numero_cheque'] }} · {{ pago['banco_emisor'] }} · {{ pago['fecha_cheque'] }}<br>
+                {{ pago['estado_cheque'] }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>{{ pago['notas'] or '-' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <article class="secondary">
+      <p>Todavía no hay pagos registrados en esta factura.</p>
+    </article>
+  {% endif %}
+</section>
+{% endblock %}

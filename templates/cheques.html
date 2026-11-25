@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block titulo %}Cheques | Cuentas por pagar{% endblock %}
+
+{% block contenido %}
+<section>
+  <hgroup>
+    <h1>Cheques emitidos</h1>
+    <p>Solo un cheque compensado reduce la deuda de la factura.</p>
+  </hgroup>
+</section>
+
+<section>
+  <form method="get" action="{{ url_for('cheques') }}">
+    <div class="grid">
+      <div>
+        <label for="estado">Estado</label>
+        <select id="estado" name="estado">
+          <option value="">Todos</option>
+          {% for opcion in estados %}
+            <option value="{{ opcion }}" {{ 'selected' if estado == opcion else '' }}>{{ opcion }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="q">Buscar</label>
+        <input type="search" id="q" name="q" value="{{ buscar }}" placeholder="Número, factura o proveedor">
+      </div>
+    </div>
+    <button type="submit" class="secondary">Aplicar filtros</button>
+  </form>
+</section>
+
+{% if datos.elementos %}
+  <section>
+    <table>
+      <thead>
+        <tr>
+          <th>Cheque</th>
+          <th>Proveedor</th>
+          <th>Factura</th>
+          <th>Fecha</th>
+          <th>Monto</th>
+          <th>Estado</th>
+          <th>Afecta saldo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cheque in datos.elementos %}
+          <tr>
+            <td>{{ cheque['numero_cheque'] }}</td>
+            <td>{{ cheque['proveedor_nombre'] }}</td>
+            <td><a href="{{ url_for('factura_detalle', factura_id=cheque['factura_id']) }}">{{ cheque['numero_factura'] }}</a></td>
+            <td>{{ cheque['fecha_cheque'] }}</td>
+            <td>{{ cheque['monto']|moneda }}</td>
+            <td>{{ cheque['estado_cheque'] }}</td>
+            <td>{{ cheque['monto_efectivo']|moneda }}</td>
+            <td>
+              <a href="{{ url_for('pago_historial', pago_id=cheque['id']) }}" class="secondary outline">Historial</a>
+
+              {% if usuario['rol'] in ['administrador', 'contador'] %}
+                <form method="post" action="{{ url_for('pago_cambiar_estado', pago_id=cheque['id']) }}" style="display: inline; margin: 0;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="origen" value="cheques">
+                  <select name="estado_cheque" aria-label="Nuevo estado del cheque {{ cheque['numero_cheque'] }}" onchange="this.form.submit()">
+                    {% for opcion in estados %}
+                      <option value="{{ opcion }}" {{ 'selected' if cheque['estado_cheque'] == opcion else '' }}>{{ opcion }}</option>
+                    {% endfor %}
+                  </select>
+                  <noscript><button type="submit">Cambiar</button></noscript>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <nav aria-label="Paginación">
+    <ul>
+      <li>
+        {% if datos.pagina > 1 %}
+          <a href="{{ url_for('cheques', estado=estado, q=buscar, pagina=datos.pagina - 1) }}">Anterior</a>
+        {% else %}
+          <span class="secondary">Anterior</span>
+        {% endif %}
+      </li>
+      <li><span>Página {{ datos.pagina }} de {{ datos.total_paginas }} ({{ datos.total }} cheques)</span></li>
+      <li>
+        {% if datos.pagina < datos.total_paginas %}
+          <a href="{{ url_for('cheques', estado=estado, q=buscar, pagina=datos.pagina + 1) }}">Siguiente</a>
+        {% else %}
+          <span class="secondary">Siguiente</span>
+        {% endif %}
+      </li>
+    </ul>
+  </nav>
+{% else %}
+  <article class="secondary">
+    <p>No hay cheques para mostrar.</p>
+  </article>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block titulo %}Registrar pago | Cuentas por pagar{% endblock %}
+
+{% block contenido %}
+<section>
+  <hgroup>
+    <h1>Registrar pago</h1>
+    <p>Factura {{ factura['numero_factura'] }} · Saldo pendiente: {{ factura['saldo']|moneda }}</p>
+  </hgroup>
+
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="grid">
+      <div>
+        <label for="monto">Monto</label>
+        <input type="number" id="monto" name="monto" value="{{ datos['monto'] }}" step="0.01" min="0.01" max="{{ factura['saldo'] }}" required autofocus>
+      </div>
+      <div>
+        <label for="fecha_pago">Fecha de pago</label>
+        <input type="date" id="fecha_pago" name="fecha_pago" value="{{ datos['fecha_pago'] or hoy }}" required>
+      </div>
+    </div>
+
+    <label for="metodo">Método de pago</label>
+    <select id="metodo" name="metodo" required>
+      {% for metodo in metodos %}
+        <option value="{{ metodo }}" {{ 'selected' if datos['metodo'] == metodo else '' }}>{{ metodo }}</option>
+      {% endfor %}
+    </select>
+
+    <div id="campos-cheque">
+      <div class="grid">
+        <div>
+          <label for="numero_cheque">Número de cheque</label>
+          <input type="text" id="numero_cheque" name="numero_cheque" value="{{ datos['numero_cheque'] }}">
+        </div>
+        <div>
+          <label for="banco_emisor">Banco emisor</label>
+          <input type="text" id="banco_emisor" name="banco_emisor" value="{{ datos['banco_emisor'] }}">
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="fecha_cheque">Fecha del cheque</label>
+          <input type="date" id="fecha_cheque" name="fecha_cheque" value="{{ datos['fecha_cheque'] or hoy }}">
+        </div>
+        <div>
+          <label for="estado_cheque">Estado del cheque</label>
+          <select id="estado_cheque" name="estado_cheque">
+            {% for estado in estados_cheque %}
+              <option value="{{ estado }}" {{ 'selected' if datos['estado_cheque'] == estado else '' }}>{{ estado }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <label for="notas">Notas</label>
+    <textarea id="notas" name="notas" rows="3">{{ datos['notas'] }}</textarea>
+
+    <button type="submit">Guardar pago</button>
+    <a href="{{ url_for('factura_detalle', factura_id=factura['id']) }}" role="button" class="secondary">Cancelar</a>
+  </form>
+</section>
+
+<script>
+  const metodoPago = document.getElementById('metodo');
+  const camposCheque = document.getElementById('campos-cheque');
+
+  function actualizarCamposCheque() {
+    const esCheque = metodoPago.value === 'Cheque';
+    camposCheque.style.display = esCheque ? '' : 'none';
+    camposCheque.querySelectorAll('input, select').forEach(function (campo) {
+      campo.required = esCheque;
+    });
+  }
+
+  metodoPago.addEventListener('change', actualizarCamposCheque);
+  actualizarCamposCheque();
+</script>
+{% endblock %}
