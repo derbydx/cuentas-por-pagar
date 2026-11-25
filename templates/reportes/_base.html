@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ titulo }} · Reportes{% endblock %}
+
+{% block estilos_extra %}
+<style>
+  td.num, th.num { text-align: right; }
+  .reporte-nota { color: var(--pico-muted-color); font-size: 0.875rem; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+{% set actual = request.endpoint or '' %}
+<nav aria-label="Reportes">
+  <ul>
+    <li><a href="{{ url_for('reportes.index') }}"{% if actual == 'reportes.index' %} aria-current="page"{% endif %}>Resumen</a></li>
+    <li><a href="{{ url_for('reportes.antiguedad') }}"{% if actual.startswith('reportes.antiguedad') %} aria-current="page"{% endif %}>Antigüedad</a></li>
+    <li><a href="{{ url_for('reportes.pagos_mensuales') }}"{% if actual.startswith('reportes.pagos_mensuales') %} aria-current="page"{% endif %}>Pagos</a></li>
+    <li><a href="{{ url_for('reportes.facturas_vencer') }}"{% if actual.startswith('reportes.facturas_vencer') %} aria-current="page"{% endif %}>Por vencer</a></li>
+    <li><a href="{{ url_for('reportes.cheques') }}"{% if actual.startswith('reportes.cheques') %} aria-current="page"{% endif %}>Cheques</a></li>
+    <li><a href="{{ url_for('reportes.auditoria') }}"{% if actual.startswith('reportes.auditoria') %} aria-current="page"{% endif %}>Auditoría</a></li>
+    <li><a href="{{ url_for('reportes.conciliacion') }}"{% if actual.startswith('reportes.conciliacion') %} aria-current="page"{% endif %}>Conciliación</a></li>
+    <li><a href="{{ url_for('reportes.top') }}"{% if actual.startswith('reportes.top') %} aria-current="page"{% endif %}>Top proveedores</a></li>
+  </ul>
+</nav>
+
+<h2>{{ titulo }}</h2>
+{% if descripcion %}<p>{{ descripcion }}</p>{% endif %}
+
+{% block filtros %}{% endblock %}
+{% block resultado %}{% endblock %}
+{% endblock %}

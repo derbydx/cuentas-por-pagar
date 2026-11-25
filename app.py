@@ -1,12 +1,9 @@
-import csv
-import io
 import os
 import sqlite3
 from datetime import date
 
 from flask import (
     Flask,
-    Response,
     abort,
     flash,
     redirect,
@@ -33,6 +30,7 @@ from servicios import (
     ROLES,
     formato_moneda,
     metricas_dashboard,
+    numero_csv,
     obtener_cheques,
     obtener_factura,
     obtener_facturas,
@@ -42,7 +40,10 @@ from servicios import (
     obtener_proveedores,
     obtener_usuarios,
     paginar,
+    responder_csv,
+    valor_csv,
 )
+from reportes import reportes_bp
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -62,6 +63,7 @@ app.config["BASE_DATOS"] = os.environ.get(
 
 app.teardown_appcontext(close_db)
 app.register_blueprint(auth_bp)
+app.register_blueprint(reportes_bp)
 app.context_processor(inyectar_contexto)
 app.jinja_env.filters["moneda"] = formato_moneda
 
@@ -773,31 +775,6 @@ def pago_cambiar_estado(pago_id):
     if request.form.get("origen") == "historial":
         return redirect(url_for("pago_historial", pago_id=pago_id))
     return redirect(url_for("cheques"))
-
-
-def valor_csv(valor):
-    texto = "" if valor is None else str(valor)
-    if texto.startswith(("=", "+", "-", "@", "\t", "\r")):
-        return "'" + texto
-    return texto
-
-
-def numero_csv(valor):
-    return f"{float(valor):.2f}".replace(".", ",")
-
-
-def responder_csv(nombre, encabezados, filas):
-    salida = io.StringIO()
-    salida.write("\ufeff")
-    escritor = csv.writer(salida, delimiter=";", lineterminator="\r\n")
-    escritor.writerow([valor_csv(columna) for columna in encabezados])
-
-    for fila in filas:
-        escritor.writerow([valor_csv(celda) for celda in fila])
-
-    respuesta = Response(salida.getvalue(), mimetype="text/csv; charset=utf-8")
-    respuesta.headers["Content-Disposition"] = f'attachment; filename="{nombre}"'
-    return respuesta
 
 
 @app.route("/exportar")

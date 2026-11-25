@@ -630,5 +630,334 @@ class PruebasPanel(PruebasBase):
         self.assertIn(b"RD$ 500.00", respuesta.data)
 
 
+class PruebasReportes(PruebasBase):
+    PAGINAS = (
+        "/reportes/",
+        "/reportes/antiguedad",
+        "/reportes/pagos-mensuales",
+        "/reportes/facturas-por-vencer",
+        "/reportes/cheques",
+        "/reportes/auditoria-cheques",
+        "/reportes/conciliacion-mensual",
+        "/reportes/top-proveedores",
+    )
+    CSVS = (
+        "/reportes/antiguedad.csv",
+        "/reportes/pagos-mensuales.csv",
+        "/reportes/facturas-por-vencer.csv",
+        "/reportes/cheques.csv",
+        "/reportes/auditoria-cheques.csv",
+        "/reportes/conciliacion-mensual.csv",
+        "/reportes/top-proveedores.csv",
+    )
+
+    def test_menu_y_paginas(self):
+        self.assertIn(b">Reportes</a>", self.cliente.get("/").data)
+
+        for ruta in self.PAGINAS:
+            with self.subTest(ruta=ruta):
+                respuesta = self.cliente.get(ruta)
+                self.assertEqual(respuesta.status_code, 200)
+                self.assertIn(b'aria-current="page"', respuesta.data)
+
+    def test_csv_formato(self):
+        for ruta in self.CSVS:
+            with self.subTest(ruta=ruta):
+                respuesta = self.cliente.get(ruta)
+                self.assertEqual(respuesta.status_code, 200)
+                self.assertTrue(respuesta.data.startswith(b"\xef\xbb\xbf"))
+                self.assertIn("text/csv", respuesta.headers["Content-Type"])
+                cabecera = respuesta.data.decode("utf-8-sig").splitlines()[0]
+                self.assertIn(";", cabecera)
+
+    def test_reportes_requieren_login(self):
+        self.salir()
+
+        for ruta in self.PAGINAS + self.CSVS:
+            with self.subTest(ruta=ruta):
+                self.assertEqual(self.cliente.get(ruta).status_code, 302)
+
+    def test_consultor_ve_y_descarga(self):
+        self.crear_usuario("lector_reportes", "consultor", "ClaveLector")
+        self.salir()
+        self.entrar("lector_reportes", "ClaveLector")
+
+        self.assertEqual(self.cliente.get("/reportes/antiguedad").status_code, 200)
+        self.assertEqual(self.cliente.get("/reportes/antiguedad.csv").status_code, 200)
+        self.assertNotIn(b"Eliminar", self.cliente.get("/reportes/cheques").data)
+
+    def test_antiguedad_suma_total_del_panel(self):
+        self.crear_factura("F-ANT-1", 1000, vencimiento=AYER)
+        self.crear_factura("F-ANT-2", 500, vencimiento=MANANA)
+
+        with app.app_context():
+            from servicios import metricas_dashboard
+
+            total = metricas_dashboard()["total_por_pagar"]
+
+        self.assertIn(f"RD$ {total:,.2f}".encode(), self.cliente.get("/reportes/antiguedad").data)
+        csv = self.cliente.get("/reportes/antiguedad.csv").data.decode("utf-8-sig")
+        self.assertIn("1500,00", csv)
+
+    def test_antiguedad_clasifica_rangos(self):
+        proveedor_id = self.crear_proveedor("Proveedor Rangos")
+        self.crear_factura(
+            "F-R1", 100, proveedor_id, vencimiento=(date.today() - timedelta(days=10)).isoformat()
+        )
+        self.crear_factura(
+            "F-R2", 200, proveedor_id, vencimiento=(date.today() - timedelta(days=45)).isoformat()
+        )
+        self.crear_factura(
+            "F-R3", 300, proveedor_id, vencimiento=(date.today() - timedelta(days=100)).isoformat()
+        )
+        self.crear_factura("F-R4", 400, proveedor_id, vencimiento=MANANA)
+
+        with app.app_context():
+            from servicios import resumen_antiguedad
+
+            totales = resumen_antiguedad()["totales"]
+
+        self.assertEqual(totales["corriente"], 400.0)
+        self.assertEqual(totales["rango_1_30"], 100.0)
+        self.assertEqual(totales["rango_31_60"], 200.0)
+        self.assertEqual(totales["rango_61_90"], 0.0)
+        self.assertEqual(totales["rango_mas_90"], 300.0)
+
+    def test_antiguedad_filtro_proveedor(self):
+        primero = self.crear_proveedor("Proveedor Uno Reporte")
+        segundo = self.crear_proveedor("Proveedor Dos Reporte")
+        self.crear_factura("F-UNO", 100, primero, vencimiento=AYER)
+        self.crear_factura("F-DOS", 900, segundo, vencimiento=AYER)
+
+        respuesta = self.cliente.get(f"/reportes/antiguedad?proveedor_id={primero}").data
+        cuerpo = respuesta.split(b"<tbody>")[1].split(b"</tbody>")[0]
+        self.assertIn(b"Proveedor Uno Reporte", cuerpo)
+        self.assertNotIn(b"Proveedor Dos Reporte", cuerpo)
+
+        csv = self.cliente.get(
+            f"/reportes/antiguedad.csv?proveedor_id={primero}"
+        ).data.decode("utf-8-sig")
+        self.assertIn("100,00", csv)
+        self.assertNotIn("900,00", csv)
+
+    def test_pagos_mensuales_solo_efectivo(self):
+        factura_id = self.crear_factura("F-PAGOS-MES", 1000)
+        self.pagar(factura_id, 200)
+        self.pagar(
+            factura_id,
+            300,
+            metodo="Cheque",
+            estado_cheque="Emitido / En cartera",
+            numero_cheque="CH-MES-1",
+        )
+        self.pagar(
+            factura_id,
+            400,
+            metodo="Cheque",
+            estado_cheque="Cobrado / Compensado",
+            numero_cheque="CH-MES-2",
+        )
+        self.pagar(
+            factura_id,
+            100,
+            metodo="Cheque",
+            estado_cheque="Devuelto / Rechazado",
+            numero_cheque="CH-MES-3",
+        )
+
+        with app.app_context():
+            from servicios import pagos_por_mes
+
+            resumen = pagos_por_mes(date.today().replace(day=1), date.today())
+
+        self.assertEqual(resumen["totales"]["efectivo"], 200.0)
+        self.assertEqual(resumen["totales"]["cheque"], 400.0)
+        self.assertEqual(resumen["totales"]["total"], 600.0)
+
+        csv = self.cliente.get("/reportes/pagos-mensuales.csv").data.decode("utf-8-sig")
+        self.assertIn("600,00", csv)
+        self.assertNotIn("1000,00", csv)
+
+    def test_pagos_mensuales_filtro_proveedor(self):
+        primero = self.crear_proveedor("Proveedor Pago Uno")
+        segundo = self.crear_proveedor("Proveedor Pago Dos")
+        self.pagar(self.crear_factura("F-P1", 500, primero), 100)
+        self.pagar(self.crear_factura("F-P2", 1000, segundo), 900)
+
+        csv = self.cliente.get(
+            f"/reportes/pagos-mensuales.csv?proveedor_id={primero}"
+        ).data.decode("utf-8-sig")
+        self.assertIn("Proveedor Pago Uno", csv)
+        self.assertNotIn("Proveedor Pago Dos", csv)
+        self.assertIn("100,00", csv)
+        self.assertNotIn("900,00", csv)
+
+    def test_facturas_por_vencer_filtros(self):
+        self.crear_factura("F-VEN-REP", 500, vencimiento=AYER)
+        self.crear_factura("F-FUT-REP", 500, vencimiento=MANANA)
+        lejana = (date.today() + timedelta(days=90)).isoformat()
+        self.crear_factura("F-LEJ-REP", 500, vencimiento=lejana)
+
+        respuesta = self.cliente.get("/reportes/facturas-por-vencer?dias=30").data
+        self.assertIn(b"F-VEN-REP", respuesta)
+        self.assertIn(b"F-FUT-REP", respuesta)
+        self.assertNotIn(b"F-LEJ-REP", respuesta)
+        self.assertIn(b"-10", respuesta)
+
+        vencidas = self.cliente.get("/reportes/facturas-por-vencer?estado=Vencida").data
+        self.assertIn(b"F-VEN-REP", vencidas)
+        self.assertNotIn(b"F-FUT-REP", vencidas)
+
+    def test_facturas_por_vencer_csv(self):
+        self.crear_factura("F-CSV-VEN", 250, vencimiento=AYER)
+        csv = self.cliente.get("/reportes/facturas-por-vencer.csv").data.decode("utf-8-sig")
+        self.assertIn("F-CSV-VEN", csv)
+        self.assertIn("-10", csv)
+        self.assertIn("250,00", csv)
+        self.assertIn("Vencida", csv)
+
+    def test_cheques_reporte_filtros_y_totales(self):
+        factura_id = self.crear_factura("F-CH-REP", 1000)
+        self.pagar(
+            factura_id,
+            100,
+            metodo="Cheque",
+            estado_cheque="Emitido / En cartera",
+            numero_cheque="CH-REP-1",
+            banco="Banco Alpha",
+        )
+        self.pagar(
+            factura_id,
+            200,
+            metodo="Cheque",
+            estado_cheque="Cobrado / Compensado",
+            numero_cheque="CH-REP-2",
+            banco="Banco Beta",
+        )
+
+        por_banco = self.cliente.get("/reportes/cheques?banco=Alpha").data
+        self.assertIn(b"CH-REP-1", por_banco)
+        self.assertNotIn(b"CH-REP-2", por_banco)
+
+        por_estado = self.cliente.get(
+            "/reportes/cheques?estado=Cobrado%20%2F%20Compensado"
+        ).data
+        self.assertIn(b"CH-REP-2", por_estado)
+        self.assertNotIn(b"CH-REP-1", por_estado)
+
+        csv = self.cliente.get("/reportes/cheques.csv").data.decode("utf-8-sig")
+        self.assertIn("300,00", csv)
+        self.assertIn("200,00", csv)
+
+    def test_auditoria_de_cheques(self):
+        factura_id = self.crear_factura("F-AUD-REP", 1000)
+        self.pagar(
+            factura_id,
+            100,
+            metodo="Cheque",
+            estado_cheque="Emitido / En cartera",
+            numero_cheque="CH-AUD",
+        )
+
+        with app.app_context():
+            pago_id = get_db().execute(
+                "SELECT id FROM pagos WHERE numero_cheque = 'CH-AUD'"
+            ).fetchone()[0]
+
+        token = self.token(self.cliente.get("/cheques"))
+        self.cliente.post(
+            f"/pagos/{pago_id}/estado",
+            data={"csrf_token": token, "estado_cheque": "Cobrado / Compensado"},
+        )
+
+        respuesta = self.cliente.get("/reportes/auditoria-cheques?usuario=admin").data
+        self.assertIn(b"CH-AUD", respuesta)
+        self.assertIn(b"admin", respuesta)
+        self.assertIn(b"Cobrado / Compensado", respuesta)
+
+        csv = self.cliente.get(
+            "/reportes/auditoria-cheques.csv?estado_nuevo=Cobrado%20%2F%20Compensado"
+        ).data.decode("utf-8-sig")
+        self.assertIn("CH-AUD", csv)
+        self.assertIn("admin", csv)
+
+    def test_conciliacion_mensual(self):
+        factura_id = self.crear_factura("F-CONC", 1000)
+        self.pagar(factura_id, 400)
+
+        respuesta = self.cliente.get("/reportes/conciliacion-mensual").data
+        self.assertIn(b"RD$ 1,000.00", respuesta)
+        self.assertIn(b"RD$ 400.00", respuesta)
+        self.assertIn(b"RD$ 600.00", respuesta)
+
+        csv = self.cliente.get("/reportes/conciliacion-mensual.csv").data.decode("utf-8-sig")
+        self.assertIn("1000,00", csv)
+        self.assertIn("400,00", csv)
+        self.assertIn("600,00", csv)
+
+    def test_top_proveedores_orden_y_porcentaje(self):
+        alto = self.crear_proveedor("Proveedor Top Alto")
+        bajo = self.crear_proveedor("Proveedor Top Bajo")
+        self.crear_factura("F-TOP1", 1000, alto, vencimiento=AYER)
+        self.crear_factura("F-TOP2", 200, bajo, vencimiento=MANANA)
+
+        respuesta = self.cliente.get("/reportes/top-proveedores").data
+        self.assertLess(
+            respuesta.index(b"Proveedor Top Alto"),
+            respuesta.index(b"Proveedor Top Bajo"),
+        )
+
+        csv = self.cliente.get("/reportes/top-proveedores.csv").data.decode("utf-8-sig")
+        self.assertIn("83,3", csv)
+
+    def test_top_proveedores_limite(self):
+        for numero in range(6):
+            proveedor_id = self.crear_proveedor(f"Proveedor Ranking {numero}")
+            self.crear_factura(f"F-RANK-{numero}", 100, proveedor_id, vencimiento=AYER)
+
+        csv = self.cliente.get("/reportes/top-proveedores.csv?limite=5").data.decode("utf-8-sig")
+        self.assertEqual(len(csv.splitlines()), 7)
+
+    def test_presets_de_fecha(self):
+        from servicios import resolver_rango
+
+        hoy = date(2026, 11, 25)
+        casos = {
+            "mes": (date(2026, 11, 1), hoy),
+            "3m": (date(2026, 9, 1), hoy),
+            "trimestre_actual": (date(2026, 10, 1), hoy),
+            "trimestre_anterior": (date(2026, 7, 1), date(2026, 9, 30)),
+            "6m": (date(2026, 6, 1), hoy),
+            "12m": (date(2025, 12, 1), hoy),
+        }
+
+        for preset, esperado in casos.items():
+            with self.subTest(preset=preset):
+                self.assertEqual(resolver_rango(preset, hoy=hoy), esperado)
+
+    def test_rango_personalizado_invalido(self):
+        respuesta = self.cliente.get(
+            "/reportes/pagos-mensuales?rango=personalizado&desde=xx&hasta=yy",
+            follow_redirects=True,
+        )
+        self.assertIn(b"no es v", respuesta.data)
+        self.assertIn("Últimos 12 meses".encode("utf-8"), respuesta.data)
+
+    def test_csv_escapa_formulas(self):
+        proveedor_id = self.crear_proveedor("=SUM(A1)")
+        self.crear_factura("F-FORMULA", 100, proveedor_id, vencimiento=AYER)
+        csv = self.cliente.get("/reportes/antiguedad.csv").data.decode("utf-8-sig")
+        self.assertIn("'=SUM(A1)", csv)
+
+    def test_csv_url_conserva_filtros(self):
+        proveedor_id = self.crear_proveedor("Proveedor URL")
+        respuesta = self.cliente.get(
+            f"/reportes/antiguedad?proveedor_id={proveedor_id}"
+        ).data
+        self.assertIn(
+            f"/reportes/antiguedad.csv?proveedor_id={proveedor_id}".encode(), respuesta
+        )
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -1,0 +1,88 @@
+{% macro bloque(csv_url) %}
+<form method="get">
+  <div class="grid">
+    {{ caller() }}
+  </div>
+  <div class="acciones">
+    <button type="submit">Aplicar filtros</button>
+    <a href="{{ csv_url }}" role="button" class="secondary outline">Descargar CSV</a>
+  </div>
+</form>
+{% endmacro %}
+
+{% macro proveedor(proveedores, seleccionado='') %}
+<label>
+  Proveedor
+  <select name="proveedor_id">
+    <option value="">Todos</option>
+    {% for item in proveedores %}
+      <option value="{{ item['id'] }}"{% if seleccionado|string == item['id']|string %} selected{% endif %}>{{ item['nombre'] }}</option>
+    {% endfor %}
+  </select>
+</label>
+{% endmacro %}
+
+{% macro campo_fecha(valor, presets) %}
+<label>
+  Fecha de corte
+  <input type="date" name="fecha_corte" value="{{ valor.isoformat() if valor else '' }}">
+</label>
+<label>
+  Ir a
+  <select data-fecha-destino="fecha_corte">
+    <option value="">Elegir...</option>
+    {% for valor_preset, texto in presets %}
+      <option value="{{ valor_preset }}">{{ texto }}</option>
+    {% endfor %}
+  </select>
+</label>
+{% endmacro %}
+
+{% macro rango(actual, desde, hasta, rangos) %}
+<label>
+  Periodo
+  <select name="rango">
+    {% for clave, texto in rangos %}
+      <option value="{{ clave }}"{% if clave == actual %} selected{% endif %}>{{ texto }}</option>
+    {% endfor %}
+  </select>
+</label>
+<label>
+  Desde
+  <input type="date" name="desde" value="{{ desde.isoformat() if desde else '' }}">
+</label>
+<label>
+  Hasta
+  <input type="date" name="hasta" value="{{ hasta.isoformat() if hasta else '' }}">
+</label>
+{% endmacro %}
+
+{% macro seleccion(nombre, etiqueta, valor, opciones) %}
+<label>
+  {{ etiqueta }}
+  <select name="{{ nombre }}">
+    {% for opcion in opciones %}
+      <option value="{{ opcion }}"{% if opcion|string == valor|string %} selected{% endif %}>{{ opcion }}</option>
+    {% endfor %}
+  </select>
+</label>
+{% endmacro %}
+
+{% macro seleccion_todos(nombre, etiqueta, valor, opciones) %}
+<label>
+  {{ etiqueta }}
+  <select name="{{ nombre }}">
+    <option value=""{% if not valor %} selected{% endif %}>Todos</option>
+    {% for opcion in opciones %}
+      <option value="{{ opcion }}"{% if valor == opcion %} selected{% endif %}>{{ opcion }}</option>
+    {% endfor %}
+  </select>
+</label>
+{% endmacro %}
+
+{% macro texto(nombre, etiqueta, valor) %}
+<label>
+  {{ etiqueta }}
+  <input type="text" name="{{ nombre }}" value="{{ valor }}">
+</label>
+{% endmacro %}

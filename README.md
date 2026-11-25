@@ -45,6 +45,21 @@ python app.py
 - Panel con total por pagar, total vencido, pagado del mes y cheques pendientes.
 - Exportación de facturas y pagos a CSV con separador `;`, BOM UTF-8 y escape de fórmulas.
 - Usuarios con roles `administrador`, `contador` y `consultor`.
+- Reportes de solo lectura con vista web y CSV.
+
+## Reportes
+
+Menú `Reportes`, accesible para cualquier usuario con sesión:
+
+- Antigüedad de saldos: corriente, 1 a 30, 31 a 60, 61 a 90 y más de 90 días, por proveedor.
+- Pagos por mes y método: efectivo, transferencia, cheque compensado y otro.
+- Facturas por vencer y vencidas: con horizonte de 7 a 90 días, proveedor y estado.
+- Reporte de cheques: por estado, banco y rango de fechas.
+- Auditoría de cheques: cambios de estado con usuario y fecha.
+- Conciliación mensual: emitido, pagado, variación y saldo al cierre.
+- Top proveedores: ranking por saldo, con límite de 5, 10 o 20.
+
+Los presets de fecha son mes actual, últimos 3 meses, trimestre actual, trimestre anterior, últimos 6 meses, últimos 12 meses y personalizado. En reportes de saldo, la fecha funciona como corte. Botón `Descargar CSV` conserva los filtros aplicados.
 
 ## Reglas de saldo
 
@@ -75,20 +90,22 @@ Sin esa bandera, el script se detiene cuando la base no está vacía.
 .\.venv\Scripts\python.exe -m unittest -v test_app.py
 ```
 
-Actualmente hay 34 pruebas. Cubren login, CSRF, roles, altas y ediciones, borrados protegidos, reglas de saldo, cheques, historial, panel, paginación, JS externo y CSV.
+Actualmente hay 54 pruebas. Cubren login, CSRF, roles, altas y ediciones, borrados protegidos, reglas de saldo, cheques, historial, panel, paginación, JS externo, CSV y los 7 reportes con sus filtros.
 
 ## Estructura
 
 - `app.py`: configuración y rutas.
 - `db.py`: esquema SQLite, conexiones y vistas.
 - `auth.py`: login, roles y CSRF.
-- `servicios.py`: reglas de negocio, filtros, métricas y paginación.
+- `servicios.py`: reglas de negocio, filtros, métricas, agregaciones de reportes, CSV y paginación.
+- `reportes.py`: blueprint con las rutas de los 7 reportes y sus CSV.
 - `sembrar_demo.py`: datos de ejemplo.
 - `test_app.py`: pruebas automáticas.
 - `templates/`: plantillas Jinja2 con Pico.css por CDN y macro de paginación compartida.
-- `static/app.js`: único script, carga condicional de campos de cheque.
+- `templates/reportes/`: base, filtros compartidos y una plantilla por reporte.
+- `static/app.js`: único script, campos de cheque y presets de fecha.
 - `NOTAS_IMPORTANTES.md`: arranque, credenciales y solución de problemas.
 
 ## Estado del proyecto
 
-Plan completo de 13 pasos terminado. Los cambios de vista están en la rama `prueba`. Pendiente de merge a `main` cuando lo autorices.
+Plan completo de 13 pasos terminado. Los cambios de vista y los reportes están en la rama `prueba`. Pendiente de merge a `main` cuando lo autorices.

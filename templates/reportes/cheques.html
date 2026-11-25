@@ -1,0 +1,57 @@
+{% extends "reportes/_base.html" %}
+{% from "reportes/_filtros.html" import bloque, rango, seleccion_todos, texto %}
+
+{% block filtros %}
+{% call bloque(csv_url) %}
+  {{ rango(rango_actual, desde, hasta, rangos) }}
+  {{ seleccion_todos('estado', 'Estado', estado, estados) }}
+  {{ texto('banco', 'Banco emisor', banco) }}
+{% endcall %}
+{% endblock %}
+
+{% block resultado %}
+<div class="tabla-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Cheque</th>
+        <th>Factura</th>
+        <th>Proveedor</th>
+        <th>Banco</th>
+        <th>Fecha</th>
+        <th class="num">Monto</th>
+        <th class="num">Afecta saldo</th>
+        <th>Estado</th>
+        <th class="num">Días</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in resumen.filas %}
+        <tr>
+          <td>{{ fila.numero_cheque }}</td>
+          <td>{{ fila.numero_factura }}</td>
+          <td>{{ fila.proveedor_nombre }}</td>
+          <td>{{ fila.banco_emisor }}</td>
+          <td>{{ fila.fecha_cheque }}</td>
+          <td class="num">{{ fila.monto | moneda }}</td>
+          <td class="num">{{ fila.monto_efectivo | moneda }}</td>
+          <td{% if fila.estado_cheque == 'Devuelto / Rechazado' %} class="estado-alerta"{% endif %}>{{ fila.estado_cheque }}</td>
+          <td class="num">{{ fila.dias if fila.dias is not none else '-' }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="9">No hay cheques en el período.</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th>Total</th>
+        <th></th><th></th><th></th><th></th>
+        <th class="num">{{ resumen.totales.monto | moneda }}</th>
+        <th class="num">{{ resumen.totales.monto_efectivo | moneda }}</th>
+        <th></th><th></th>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<p class="reporte-nota">El total de "Afecta saldo" respeta la regla de solo cheques compensados.</p>
+{% endblock %}

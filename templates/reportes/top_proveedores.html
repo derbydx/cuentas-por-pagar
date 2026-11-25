@@ -1,0 +1,52 @@
+{% extends "reportes/_base.html" %}
+{% from "reportes/_filtros.html" import bloque, proveedor, campo_fecha, seleccion %}
+
+{% block filtros %}
+{% call bloque(csv_url) %}
+  {{ proveedor(proveedores, proveedor_id) }}
+  {{ campo_fecha(fecha_corte, presets) }}
+  {{ seleccion('limite', 'Tamaño', limite, [5, 10, 20]) }}
+{% endcall %}
+{% endblock %}
+
+{% block resultado %}
+<div class="tabla-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th class="num">#</th>
+        <th>Proveedor</th>
+        <th class="num">Facturas</th>
+        <th class="num">Saldo total</th>
+        <th class="num">Saldo vencido</th>
+        <th class="num">%</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in resumen.filas %}
+        <tr>
+          <td class="num">{{ fila.posicion }}</td>
+          <td>{{ fila.proveedor }}</td>
+          <td class="num">{{ fila.facturas }}</td>
+          <td class="num">{{ fila.total | moneda }}</td>
+          <td class="num">{{ fila.vencido | moneda }}</td>
+          <td class="num">{{ '%.1f' | format(fila.porcentaje) }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">No hay saldos pendientes en este corte.</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th></th>
+        <th>Total general</th>
+        <th class="num">{{ resumen.totales.facturas }}</th>
+        <th class="num">{{ resumen.totales.total | moneda }}</th>
+        <th></th>
+        <th></th>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<p class="reporte-nota">El total general incluye a todos los proveedores, aunque el ranking se limite a los primeros.</p>
+{% endblock %}

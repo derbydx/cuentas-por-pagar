@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block titulo %}Reportes{% endblock %}
+
+{% block contenido %}
+<h2>Reportes</h2>
+<p>Consulta los reportes en pantalla y descarga el mismo resultado en CSV. El archivo usa separador <code>;</code> y trae BOM para abrirlo en Excel.</p>
+
+<div class="grid">
+  <article>
+    <h3><a href="{{ url_for('reportes.antiguedad') }}">Antigüedad de saldos</a></h3>
+    <p>Saldo pendiente por proveedor, clasificado por días de atraso.</p>
+  </article>
+  <article>
+    <h3><a href="{{ url_for('reportes.pagos_mensuales') }}">Pagos por mes y método</a></h3>
+    <p>Efectivo, transferencia, cheque compensado y otro, mes por mes.</p>
+  </article>
+  <article>
+    <h3><a href="{{ url_for('reportes.facturas_vencer') }}">Facturas por vencer</a></h3>
+    <p>Vencidas y próximas a vencer con días y saldo.</p>
+  </article>
+  <article>
+    <h3><a href="{{ url_for('reportes.cheques') }}">Reporte de cheques</a></h3>
+    <p>Cheques por estado, banco y fecha, con su efecto real en el saldo.</p>
+  </article>
+  <article>
+    <h3><a href="{{ url_for('reportes.auditoria') }}">Auditoría de cheques</a></h3>
+    <p>Cambios de estado con fecha y usuario responsable.</p>
+  </article>
+  <article>
+    <h3><a href="{{ url_for('reportes.conciliacion') }}">Conciliación mensual</a></h3>
+    <p>Facturas emitidas contra pagos efectivos y saldo al cierre.</p>
+  </article>
+  <article>
+    <h3><a href="{{ url_for('reportes.top') }}">Top proveedores</a></h3>
+    <p>Ranking de proveedores por saldo pendiente.</p>
+  </article>
+</div>
+
+<p class="reporte-nota">Los reportes son de solo lectura. Cualquier rol con sesión puede verlos y descargarlos.</p>
+{% endblock %}

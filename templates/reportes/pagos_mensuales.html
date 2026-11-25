@@ -1,0 +1,51 @@
+{% extends "reportes/_base.html" %}
+{% from "reportes/_filtros.html" import bloque, proveedor, rango %}
+
+{% block filtros %}
+{% call bloque(csv_url) %}
+  {{ proveedor(proveedores, proveedor_id) }}
+  {{ rango(rango_actual, desde, hasta, rangos) }}
+{% endcall %}
+{% endblock %}
+
+{% block resultado %}
+<div class="tabla-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Mes</th>
+        <th class="num">Efectivo</th>
+        <th class="num">Transferencia</th>
+        <th class="num">Cheque compensado</th>
+        <th class="num">Otro</th>
+        <th class="num">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in resumen.filas %}
+        <tr>
+          <td>{{ fila.mes }}</td>
+          <td class="num">{{ fila.efectivo | moneda }}</td>
+          <td class="num">{{ fila.transferencia | moneda }}</td>
+          <td class="num">{{ fila.cheque | moneda }}</td>
+          <td class="num">{{ fila.otro | moneda }}</td>
+          <td class="num">{{ fila.total | moneda }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">No hay pagos en el período.</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th>Total</th>
+        <th class="num">{{ resumen.totales.efectivo | moneda }}</th>
+        <th class="num">{{ resumen.totales.transferencia | moneda }}</th>
+        <th class="num">{{ resumen.totales.cheque | moneda }}</th>
+        <th class="num">{{ resumen.totales.otro | moneda }}</th>
+        <th class="num">{{ resumen.totales.total | moneda }}</th>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<p class="reporte-nota">Se suma <code>monto_efectivo</code>. Un cheque emitido, entregado o devuelto no aparece como pago.</p>
+{% endblock %}

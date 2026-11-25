@@ -1,0 +1,57 @@
+{% extends "reportes/_base.html" %}
+{% from "reportes/_filtros.html" import bloque, proveedor, campo_fecha %}
+
+{% block filtros %}
+{% call bloque(csv_url) %}
+  {{ proveedor(proveedores, proveedor_id) }}
+  {{ campo_fecha(fecha_corte, presets) }}
+{% endcall %}
+{% endblock %}
+
+{% block resultado %}
+<div class="tabla-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Proveedor</th>
+        <th class="num">Facturas</th>
+        <th class="num">Corriente</th>
+        <th class="num">1 a 30</th>
+        <th class="num">31 a 60</th>
+        <th class="num">61 a 90</th>
+        <th class="num">Más de 90</th>
+        <th class="num">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in resumen.filas %}
+        <tr>
+          <td>{{ fila.proveedor }}</td>
+          <td class="num">{{ fila.facturas }}</td>
+          <td class="num">{{ fila.corriente | moneda }}</td>
+          <td class="num">{{ fila.rango_1_30 | moneda }}</td>
+          <td class="num">{{ fila.rango_31_60 | moneda }}</td>
+          <td class="num">{{ fila.rango_61_90 | moneda }}</td>
+          <td class="num">{{ fila.rango_mas_90 | moneda }}</td>
+          <td class="num">{{ fila.total | moneda }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="8">No hay saldos pendientes en este corte.</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th>Total</th>
+        <th class="num">{{ resumen.totales.facturas }}</th>
+        <th class="num">{{ resumen.totales.corriente | moneda }}</th>
+        <th class="num">{{ resumen.totales.rango_1_30 | moneda }}</th>
+        <th class="num">{{ resumen.totales.rango_31_60 | moneda }}</th>
+        <th class="num">{{ resumen.totales.rango_61_90 | moneda }}</th>
+        <th class="num">{{ resumen.totales.rango_mas_90 | moneda }}</th>
+        <th class="num">{{ resumen.totales.total | moneda }}</th>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<p class="reporte-nota">Los rangos se cuentan desde la fecha de vencimiento hasta la fecha de corte. Se usa el saldo actual de cada factura.</p>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "reportes/_base.html" %}
+{% from "reportes/_filtros.html" import bloque, proveedor, rango %}
+
+{% block filtros %}
+{% call bloque(csv_url) %}
+  {{ proveedor(proveedores, proveedor_id) }}
+  {{ rango(rango_actual, desde, hasta, rangos) }}
+{% endcall %}
+{% endblock %}
+
+{% block resultado %}
+<div class="tabla-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Mes</th>
+        <th class="num">Emitido</th>
+        <th class="num">Pagado</th>
+        <th class="num">Variación</th>
+        <th class="num">Saldo al cierre</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in resumen.filas %}
+        <tr>
+          <td>{{ fila.mes }}</td>
+          <td class="num">{{ fila.emitido | moneda }}</td>
+          <td class="num">{{ fila.pagado | moneda }}</td>
+          <td class="num">{{ fila.variacion | moneda }}</td>
+          <td class="num">{{ fila.saldo_cierre | moneda }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="5">No hay movimientos en el período.</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th>Total</th>
+        <th class="num">{{ resumen.totales.emitido | moneda }}</th>
+        <th class="num">{{ resumen.totales.pagado | moneda }}</th>
+        <th class="num">{{ resumen.totales.variacion | moneda }}</th>
+        <th class="num">{{ resumen.totales.saldo_cierre | moneda }}</th>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<p class="reporte-nota">El saldo al cierre acumula emisiones y pagos efectivos hasta el último día de cada mes. No es el saldo actual de la vista.</p>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "reportes/_base.html" %}
+{% from "reportes/_filtros.html" import bloque, proveedor, campo_fecha, seleccion %}
+
+{% block filtros %}
+{% call bloque(csv_url) %}
+  {{ proveedor(proveedores, proveedor_id) }}
+  {{ campo_fecha(fecha_corte, presets) }}
+  {{ seleccion('dias', 'Horizonte', dias, [7, 15, 30, 60, 90]) }}
+  {{ seleccion('estado', 'Estado', estado, estados) }}
+{% endcall %}
+{% endblock %}
+
+{% block resultado %}
+<div class="tabla-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Factura</th>
+        <th>Proveedor</th>
+        <th>Vencimiento</th>
+        <th class="num">Días</th>
+        <th class="num">Saldo</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in filas %}
+        <tr>
+          <td>{{ fila.numero_factura }}</td>
+          <td>{{ fila.proveedor_nombre }}</td>
+          <td>{{ fila.fecha_vencimiento }}</td>
+          <td class="num{% if fila.vencida %} estado-alerta{% endif %}">{{ fila.dias }}</td>
+          <td class="num">{{ fila.saldo | moneda }}</td>
+          <td{% if fila.estado == 'Vencida' %} class="estado-alerta"{% endif %}>{{ fila.estado }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6">No hay facturas con saldo en este horizonte.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="reporte-nota">Días negativos indican atraso. El horizonte se mide desde la fecha de corte.</p>
+{% endblock %}

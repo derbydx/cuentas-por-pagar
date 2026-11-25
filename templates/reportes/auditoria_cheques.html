@@ -1,0 +1,43 @@
+{% extends "reportes/_base.html" %}
+{% from "reportes/_filtros.html" import bloque, rango, seleccion_todos, texto %}
+
+{% block filtros %}
+{% call bloque(csv_url) %}
+  {{ rango(rango_actual, desde, hasta, rangos) }}
+  {{ texto('usuario', 'Usuario', usuario) }}
+  {{ seleccion_todos('estado_nuevo', 'Estado nuevo', estado, estados) }}
+{% endcall %}
+{% endblock %}
+
+{% block resultado %}
+<div class="tabla-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha del cambio</th>
+        <th>Cheque</th>
+        <th>Factura</th>
+        <th>Proveedor</th>
+        <th>Estado anterior</th>
+        <th>Estado nuevo</th>
+        <th>Usuario</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in filas %}
+        <tr>
+          <td>{{ fila.fecha_cambio }}</td>
+          <td>{{ fila.numero_cheque }}</td>
+          <td>{{ fila.numero_factura }}</td>
+          <td>{{ fila.proveedor_nombre }}</td>
+          <td>{{ fila.estado_anterior or '-' }}</td>
+          <td{% if fila.estado_nuevo == 'Devuelto / Rechazado' %} class="estado-alerta"{% endif %}>{{ fila.estado_nuevo }}</td>
+          <td>{{ fila.username }}</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7">No hay cambios de estado en el período.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
