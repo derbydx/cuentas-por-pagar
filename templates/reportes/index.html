@@ -2,11 +2,19 @@
 
 {% block titulo %}Reportes{% endblock %}
 
-{% block contenido %}
-<h2>Reportes</h2>
-<p>Consulta los reportes en pantalla y descarga el mismo resultado en CSV. El archivo usa separador <code>;</code> y trae BOM para abrirlo en Excel.</p>
+{% block clase_main %} reportes{% endblock %}
 
-<div class="grid">
+{% block estilos_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='reportes.css') }}">
+{% endblock %}
+
+{% block contenido %}
+<header class="reportes-cabecera">
+  <h2>Reportes</h2>
+  <p>Consulta los reportes en pantalla y descarga el mismo resultado en CSV. El archivo usa separador <code>;</code> y trae BOM para abrirlo en Excel.</p>
+</header>
+
+<div class="tarjetas-reportes">
   <article>
     <h3><a href="{{ url_for('reportes.antiguedad') }}">Antigüedad de saldos</a></h3>
     <p>Saldo pendiente por proveedor, clasificado por días de atraso.</p>

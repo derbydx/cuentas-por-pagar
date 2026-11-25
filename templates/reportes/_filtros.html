@@ -1,6 +1,6 @@
 {% macro bloque(csv_url) %}
-<form method="get">
-  <div class="grid">
+<form method="get" class="formulario-filtros">
+  <div class="filtros">
     {{ caller() }}
   </div>
   <div class="acciones">
@@ -23,19 +23,21 @@
 {% endmacro %}
 
 {% macro campo_fecha(valor, presets) %}
-<label>
-  Fecha de corte
-  <input type="date" name="fecha_corte" value="{{ valor.isoformat() if valor else '' }}">
-</label>
-<label>
-  Ir a
-  <select data-fecha-destino="fecha_corte">
-    <option value="">Elegir...</option>
-    {% for valor_preset, texto in presets %}
-      <option value="{{ valor_preset }}">{{ texto }}</option>
-    {% endfor %}
-  </select>
-</label>
+<div class="duo-fecha">
+  <label>
+    Fecha de corte
+    <input type="date" name="fecha_corte" value="{{ valor.isoformat() if valor else '' }}">
+  </label>
+  <label>
+    Ir a
+    <select data-fecha-destino="fecha_corte">
+      <option value="">Elegir...</option>
+      {% for valor_preset, texto in presets %}
+        <option value="{{ valor_preset }}">{{ texto }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</div>
 {% endmacro %}
 
 {% macro rango(actual, desde, hasta, rangos) %}
@@ -47,14 +49,16 @@
     {% endfor %}
   </select>
 </label>
-<label>
-  Desde
-  <input type="date" name="desde" value="{{ desde.isoformat() if desde else '' }}">
-</label>
-<label>
-  Hasta
-  <input type="date" name="hasta" value="{{ hasta.isoformat() if hasta else '' }}">
-</label>
+<div class="duo-fecha">
+  <label>
+    Desde
+    <input type="date" name="desde" value="{{ desde.isoformat() if desde else '' }}">
+  </label>
+  <label>
+    Hasta
+    <input type="date" name="hasta" value="{{ hasta.isoformat() if hasta else '' }}">
+  </label>
+</div>
 {% endmacro %}
 
 {% macro seleccion(nombre, etiqueta, valor, opciones) %}

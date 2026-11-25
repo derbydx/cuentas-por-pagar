@@ -62,6 +62,20 @@
       margin: 0;
     }
 
+    .acciones button,
+    .acciones [role="button"] {
+      width: auto;
+    }
+
+    .acciones button {
+      margin: 0;
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--pico-primary-background, #0969da);
+      outline-offset: 2px;
+    }
+
     .estado-alerta {
       color: var(--alerta);
       font-weight: 600;
@@ -120,7 +134,7 @@
     </nav>
   </header>
 
-  <main class="container" id="contenido">
+  <main class="container{% block clase_main %}{% endblock %}" id="contenido">
     {% with mensajes = get_flashed_messages(with_categories=true) %}
       {% if mensajes %}
         <div role="status" aria-live="polite">

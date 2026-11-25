@@ -1,0 +1,160 @@
+/* Diseño compartido de la sección de reportes */
+
+main.container.reportes {
+  padding-top: var(--espacio);
+}
+
+nav[aria-label="Reportes"] {
+  margin-bottom: calc(var(--espacio) * 1.5);
+}
+
+nav[aria-label="Reportes"] ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+nav[aria-label="Reportes"] li {
+  margin: 0;
+  padding: 0;
+}
+
+nav[aria-label="Reportes"] a {
+  display: inline-block;
+  margin: 0;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--pico-muted-border-color, #d0d7de);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+nav[aria-label="Reportes"] a:hover {
+  border-color: var(--pico-primary-background, #0969da);
+}
+
+nav[aria-label="Reportes"] a[aria-current="page"] {
+  background: var(--pico-primary-background, #0969da);
+  border-color: var(--pico-primary-background, #0969da);
+  color: var(--pico-primary-inverse, #fff);
+}
+
+.reportes-cabecera h2 {
+  margin-bottom: 0.25rem;
+}
+
+.reportes-cabecera p {
+  margin-bottom: 0;
+  color: var(--pico-muted-color);
+}
+
+.tarjetas-reportes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin-top: calc(var(--espacio) * 1.5);
+}
+
+.tarjetas-reportes article {
+  margin: 0;
+  padding: 1rem;
+}
+
+.tarjetas-reportes h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+}
+
+.tarjetas-reportes p {
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.formulario-filtros {
+  margin-bottom: var(--espacio);
+}
+
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.75rem 1rem;
+  align-items: end;
+}
+
+.filtros label {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.filtros select,
+.filtros input {
+  margin: 0;
+}
+
+.duo-fecha {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (min-width: 48rem) {
+  .duo-fecha {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 36rem) {
+  .duo-fecha {
+    grid-column: 1 / -1;
+  }
+}
+
+.formulario-filtros .acciones {
+  margin-top: 0.75rem;
+}
+
+.formulario-filtros .acciones button,
+.formulario-filtros .acciones [role="button"] {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.875rem;
+}
+
+.tabla-scroll table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.tabla-scroll th {
+  white-space: nowrap;
+  vertical-align: bottom;
+  font-size: 0.875rem;
+}
+
+.tabla-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--pico-background-color);
+  box-shadow: inset 0 -1px 0 var(--pico-muted-border-color, #d0d7de);
+}
+
+.tabla-scroll tbody tr:hover {
+  background: var(--pico-table-row-hover-background-color, rgba(0, 0, 0, 0.035));
+}
+
+.tabla-scroll tfoot th {
+  border-top: 2px solid var(--pico-muted-border-color, #d0d7de);
+  font-weight: 700;
+}
+
+.reporte-nota {
+  margin-top: 0.75rem;
+  color: var(--pico-muted-color);
+  font-size: 0.875rem;
+}

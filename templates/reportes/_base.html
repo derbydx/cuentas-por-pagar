@@ -2,11 +2,10 @@
 
 {% block titulo %}{{ titulo }} · Reportes{% endblock %}
 
+{% block clase_main %} reportes{% endblock %}
+
 {% block estilos_extra %}
-<style>
-  td.num, th.num { text-align: right; }
-  .reporte-nota { color: var(--pico-muted-color); font-size: 0.875rem; }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='reportes.css') }}">
 {% endblock %}
 
 {% block contenido %}
@@ -24,8 +23,10 @@
   </ul>
 </nav>
 
-<h2>{{ titulo }}</h2>
-{% if descripcion %}<p>{{ descripcion }}</p>{% endif %}
+<header class="reportes-cabecera">
+  <h2>{{ titulo }}</h2>
+  {% if descripcion %}<p>{{ descripcion }}</p>{% endif %}
+</header>
 
 {% block filtros %}{% endblock %}
 {% block resultado %}{% endblock %}

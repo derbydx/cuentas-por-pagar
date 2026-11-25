@@ -104,6 +104,7 @@ Actualmente hay 54 pruebas. Cubren login, CSRF, roles, altas y ediciones, borrad
 - `templates/`: plantillas Jinja2 con Pico.css por CDN y macro de paginación compartida.
 - `templates/reportes/`: base, filtros compartidos y una plantilla por reporte.
 - `static/app.js`: único script, campos de cheque y presets de fecha.
+- `static/reportes.css`: diseño de la sección de reportes.
 - `NOTAS_IMPORTANTES.md`: arranque, credenciales y solución de problemas.
 
 ## Estado del proyecto
